@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Simulación - Bebedero ON/OFF</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 16px;
+        background: #f6f8fb;
+        color: #202528;
+      }
+      h1 {
+        margin-bottom: 8px;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 6px 18px rgba(20, 30, 50, 0.08);
+      }
+      #tank {
+        width: 340px;
+        height: 460px;
+        background: #e6eef8;
+        border-radius: 10px;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #c3d7f0;
+      }
+      #water {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(#3fa9f5, #1f86d6);
+        transition: none;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 22px;
+        will-change: height;
+      }
+      #controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      button {
+        padding: 12px 16px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        background: #1f86d6;
+        color: white;
+        font-size: 17px;
+      }
+      button.secondary {
+        background: #8896a6;
+      }
+      label {
+        font-size: 17px;
+        display: block;
+        margin-top: 4px;
+      }
+      .small {
+        font-size: 17px;
+        color: #54626b;
+      }
+      canvas {
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px;
+        max-width: 100%;
+        height: 350px !important;
+        width: 100% !important;
+      }
+      .status {
+        font-weight: 600;
+      }
+      .param {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      input[type="range"] {
+        width: 160px;
+      }
+      .footer {
+        margin-top: 12px;
+        font-size: 17px;
+        color: #4b5563;
+      }
+    </style>
+    <!-- CDN Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  </head>
+  <body>
+    <h1>Simulación: Bebedero control ON/OFF</h1>
+    <div class="row">
+      <div class="card" style="padding: 14px">
+        <div id="tank" title="Bebedero">
+          <div id="water" style="height: 70%">7.0 cm</div>
+        </div>
+
+        <div style="margin-top: 10px">
+          <div class="small">
+            Nivel real (simulado): <span id="levelReal">0.0</span> cm
+          </div>
+          <div class="small">
+            Medición (con ruido): <span id="levelMeasured">0.0</span> cm
+          </div>
+          <div class="small">
+            Señal de control (relé):
+            <span id="pumpState" class="status">OFF</span>
+          </div>
+          <div
+            class="small"
+            id="pumpIndicator"
+            style="margin-top: 4px; display: none"
+          >
+            <span style="color: #0b6623; font-weight: bold"
+              >⚡ Bomba llenando...</span
+            >
+          </div>
+          <div class="small">
+            Contador debounce (seg): <span id="debounce">0</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px" id="controls">
+          <button id="dogDrinkBtn">Perro bebe (sorbo)</button>
+          <div style="display: flex; gap: 8px; margin-top: 8px">
+            <button id="dogDrinkBurst" class="secondary">
+              Perro bebe (de a poco)
+            </button>
+            <button id="resetBtn" class="secondary">Reset</button>
+          </div>
+
+          <div style="margin-top: 10px">
+            <div class="param">
+              <label>Velocidad de llenado (cm/s) bomba:</label
+              ><input
+                id="pumpRate"
+                type="range"
+                min="1"
+                max="2"
+                step="0.1"
+                value="1"
+              /><span id="pumpRateVal">1</span>
+            </div>
+            <div class="param">
+              <label>Consumo por sorbo (cm):</label
+              ><input
+                id="sipSize"
+                type="range"
+                min="0.5"
+                max="6"
+                step="0.1"
+                value="2"
+              /><span id="sipVal">2</span>
+            </div>
+            <div class="param">
+              <label>Ruido sensor:</label
+              ><input
+                id="noise"
+                type="range"
+                min="0"
+                max="1.5"
+                step="0.01"
+                value="0.12"
+              /><span id="noiseVal">0.12</span>
+            </div>
+            <div class="param">
+              <label>Tiempo de verificación de error (s):</label
+              ><input
+                id="debounceSec"
+                type="range"
+                min="5"
+                max="30"
+                step="1"
+                value="30"
+              /><span id="debVal">30</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="flex: 1">
+        <div class="card" style="padding: 12px; margin-bottom: 12px">
+          <h3 style="margin: 0 0 8px 0; font-size: 16px">Nivel de Agua</h3>
+          <div style="height: 350px; position: relative">
+            <canvas id="chartLevel"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 12px">
+          <h3 style="margin: 0 0 8px 0; font-size: 16px">Error de Control</h3>
+          <div style="height: 350px; position: relative">
+            <canvas id="chartError"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* Parámetros basados en el documento:
+   - encendido < 3 cm, apagado >= 7 cm
+   - muestreo ≈ 1 Hz, tiempo de respuesta bombeo 5-10 s (se modela con rate de llenado)
+   - debounce (30 s) para evitar falsos positivos al beber (salpicaduras)
+   Document ref: TP TEORIA DE CONTROL-2.pdf. :contentReference[oaicite:4]{index=4}
+*/
+
+      // Simulación (unidad: cm)
+      let level = 7.0; // nivel inicial (cm)
+      const maxLevel = 10; // tope visual
+      const minLevel = 0;
+
+      // controller thresholds (from doc)
+      const thresholdOn = 3.0;
+      const thresholdOff = 7.0;
+      let sampleIntervalMs = 100; // simulation tick (smaller than sampling)
+      let samplePeriod = 1000; // controller samples every ~1s (document)
+      let lastSampleTime = 0;
+
+      // pump params (user adjustable)
+      let pumpRate = parseFloat(document.getElementById("pumpRate").value); // cm/s when pump ON
+      let sipSize = parseFloat(document.getElementById("sipSize").value); // cm drop on sip
+      let noiseSigma = parseFloat(document.getElementById("noise").value);
+      let debounceRequired = parseInt(
+        document.getElementById("debounceSec").value
+      ); // seconds
+
+      // controller state
+      let pumpOn = false;
+      let debounceCounter = 0; // in seconds of sustained below-threshold
+      let pumpSwitchTimestamp = null;
+
+      // measurement noise function
+      function gaussianNoise(sigma) {
+        // Box-Muller
+        let u1 = Math.random() || 1e-10;
+        let u2 = Math.random();
+        let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        return z0 * sigma;
+      }
+
+      // UI elements
+      const waterEl = document.getElementById("water");
+      const levelRealEl = document.getElementById("levelReal");
+      const levelMeasuredEl = document.getElementById("levelMeasured");
+      const pumpStateEl = document.getElementById("pumpState");
+      const debounceEl = document.getElementById("debounce");
+      const pumpIndicatorEl = document.getElementById("pumpIndicator");
+      const pumpRateVal = document.getElementById("pumpRateVal");
+      const sipVal = document.getElementById("sipVal");
+      const noiseVal = document.getElementById("noiseVal");
+      const debVal = document.getElementById("debVal");
+
+      // update sliders display
+      document.getElementById("pumpRate").addEventListener("input", (e) => {
+        pumpRate = parseFloat(e.target.value);
+        pumpRateVal.textContent = pumpRate.toFixed(2);
+      });
+      document.getElementById("sipSize").addEventListener("input", (e) => {
+        sipSize = parseFloat(e.target.value);
+        sipVal.textContent = sipSize.toFixed(2);
+      });
+      document.getElementById("noise").addEventListener("input", (e) => {
+        noiseSigma = parseFloat(e.target.value);
+        noiseVal.textContent = noiseSigma.toFixed(2);
+      });
+      document.getElementById("debounceSec").addEventListener("input", (e) => {
+        debounceRequired = parseInt(e.target.value);
+        debVal.textContent = debounceRequired;
+      });
+
+      // dog drink actions
+      document.getElementById("dogDrinkBtn").addEventListener("click", () => {
+        // single sip: instant drop
+        level = Math.max(minLevel, level - sipSize);
+      });
+      document.getElementById("dogDrinkBurst").addEventListener("click", () => {
+        // burst: multiple sips over 3s
+        let bursts = 6;
+        let drop = sipSize * 0.9;
+        for (let i = 0; i < bursts; i++) {
+          setTimeout(() => {
+            level = Math.max(minLevel, level - drop / bursts);
+          }, i * 300);
+        }
+      });
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        level = 7.0;
+        pumpOn = false;
+        debounceCounter = 0;
+        pumpSwitchTimestamp = null;
+      });
+
+      // Visual mapping: level/cm -> percent height of tank
+      function levelToPercent(l) {
+        return Math.max(0, Math.min(100, (l / maxLevel) * 100));
+      }
+
+      // Chart.js real-time data
+      const ctxLevel = document.getElementById("chartLevel").getContext("2d");
+      const ctxError = document.getElementById("chartError").getContext("2d");
+
+      // Data buffers for charts
+      const maxPoints = 120; // show last 2 minutes at 1s sampling
+
+      function makeChart(ctx, label, yMin, yMax, title) {
+        return new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label,
+                data: [],
+                fill: false,
+                tension: 0.15,
+                pointRadius: 0,
+                borderColor: "#1f86d6",
+                backgroundColor: "rgba(31, 134, 214, 0.1)",
+              },
+            ],
+          },
+          options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
+            scales: {
+              x: {
+                display: true,
+                title: {
+                  display: true,
+                  text: "Tiempo",
+                },
+              },
+              y: {
+                min: yMin,
+                max: yMax,
+                title: {
+                  display: true,
+                  text: label,
+                },
+              },
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: "top",
+              },
+              title: {
+                display: true,
+                text: title,
+                font: {
+                  size: 16,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      const chartLevel = makeChart(
+        ctxLevel,
+        "Nivel agua (cm)",
+        0,
+        10,
+        "Nivel de Agua"
+      );
+
+      // Configurar para mostrar todos los números de referencia en el eje Y
+      chartLevel.options.scales.y.ticks = {
+        stepSize: 1,
+        precision: 0,
+        callback: function (value) {
+          return value;
+        },
+      };
+
+      // Asegurar que se muestren todos los valores del 0 al 10
+      chartLevel.options.scales.y.afterBuildTicks = function (scale) {
+        scale.ticks = [];
+        for (let i = 0; i <= 10; i++) {
+          scale.ticks.push({ value: i });
+        }
+      };
+
+      // Agregar franjas de color usando el plugin de annotation
+      chartLevel.options.plugins.annotation = {
+        annotations: {
+          boxGreen: {
+            type: "box",
+            xMin: 0,
+            xMax: maxPoints - 1,
+            yMin: 3,
+            yMax: 10,
+            backgroundColor: "rgba(0, 255, 0, 0.2)",
+            borderColor: "rgba(0, 255, 0, 0)",
+            borderWidth: 0,
+            xScaleID: "x",
+            yScaleID: "y",
+            label: {
+              display: true,
+              content: "Nivel de agua aceptable",
+              position: "start",
+              backgroundColor: "rgba(0, 255, 0, 0.2)",
+              color: "#000",
+              font: {
+                size: 12,
+              },
+            },
+          },
+          boxRed: {
+            type: "box",
+            xMin: 0,
+            xMax: maxPoints - 1,
+            yMin: 0,
+            yMax: 3,
+            backgroundColor: "rgba(255, 0, 0, 0.2)",
+            borderColor: "rgba(255, 0, 0, 0)",
+            borderWidth: 0,
+            xScaleID: "x",
+            yScaleID: "y",
+            label: {
+              display: true,
+              content: "Nivel de agua crítico",
+              position: "start",
+              backgroundColor: "rgba(255, 0, 0, 0.2)",
+              color: "#000",
+              font: {
+                size: 12,
+              },
+            },
+          },
+        },
+      };
+
+      chartLevel.update();
+      const chartError = makeChart(
+        ctxError,
+        "Error e(t) (cm)",
+        -2,
+        8,
+        "Error de Control"
+      );
+
+      // Configurar para mostrar todos los números de referencia en el eje Y
+      chartError.options.scales.y.ticks = {
+        stepSize: 1,
+        precision: 0,
+        callback: function (value) {
+          return value;
+        },
+      };
+
+      // Asegurar que se muestren todos los valores del -2 al 8
+      chartError.options.scales.y.afterBuildTicks = function (scale) {
+        scale.ticks = [];
+        for (let i = -2; i <= 8; i++) {
+          scale.ticks.push({ value: i });
+        }
+      };
+
+      // Agregar franjas de color usando el plugin de annotation
+      chartError.options.plugins.annotation = {
+        annotations: {
+          boxGreen: {
+            type: "box",
+            xMin: 0,
+            xMax: maxPoints - 1,
+            yMin: -2,
+            yMax: 4,
+            backgroundColor: "rgba(0, 255, 0, 0.2)",
+            borderColor: "rgba(0, 255, 0, 0)",
+            borderWidth: 0,
+            xScaleID: "x",
+            yScaleID: "y",
+            label: {
+              display: true,
+              content: "Error permitido",
+              position: "start",
+              backgroundColor: "rgba(0, 255, 0, 0.2)",
+              color: "#000",
+              font: {
+                size: 12,
+              },
+            },
+          },
+          boxRed: {
+            type: "box",
+            xMin: 0,
+            xMax: maxPoints - 1,
+            yMin: 4,
+            yMax: 8,
+            backgroundColor: "rgba(255, 0, 0, 0.2)",
+            borderColor: "rgba(255, 0, 0, 0)",
+            borderWidth: 0,
+            xScaleID: "x",
+            yScaleID: "y",
+            label: {
+              display: true,
+              content: "Error fuera de franja",
+              position: "start",
+              backgroundColor: "rgba(255, 0, 0, 0.2)",
+              color: "#000",
+              font: {
+                size: 12,
+              },
+            },
+          },
+        },
+      };
+
+      chartError.update();
+
+      // reference center (center of band 3-7)
+      const refCenter = (thresholdOn + thresholdOff) / 2.0;
+
+      // controller sample function (runs every ~samplePeriod)
+      function controllerSample(measured) {
+        // measured: value including sensor noise (cm)
+        // ON/OFF with debounce: Only turn ON if measured < thresholdOn for debounceRequired seconds continuously.
+        if (measured < thresholdOn) {
+          debounceCounter++;
+        } else {
+          debounceCounter = 0;
+        }
+
+        // Turn pump ON if debounceCounter exceeded
+        if (!pumpOn && debounceCounter >= debounceRequired) {
+          pumpOn = true;
+          pumpSwitchTimestamp = Date.now();
+        }
+
+        // Turn pump OFF when level reaches thresholdOff
+        if (pumpOn && measured >= thresholdOff) {
+          pumpOn = false;
+          pumpSwitchTimestamp = Date.now();
+          debounceCounter = 0; // reset
+        }
+      }
+
+      // simulation tick (smaller steps for smoother integration)
+      let simTime = 0;
+
+      function tick(dt) {
+        // dt in seconds
+        // Pump effect: when pumpOn, level increases at pumpRate cm/s; otherwise level stays static
+        if (pumpOn && dt > 0) {
+          level += pumpRate * dt;
+          // saturate
+          if (level > maxLevel) level = maxLevel;
+        }
+        // When pump is OFF, level remains static (no decrease)
+        if (level < minLevel) level = minLevel;
+      }
+
+      // main loop
+      let lastTime = null;
+      let lastChartUpdate = 0;
+      const chartUpdateInterval = 100; // Update chart every 100ms for smooth visualization
+
+      function loop(now) {
+        // Initialize lastTime on first call
+        if (lastTime === null) {
+          lastTime = now;
+          requestAnimationFrame(loop);
+          return;
+        }
+        let elapsed = now - lastTime;
+        lastTime = now;
+        simTime += elapsed;
+
+        // step simulation in small increments for stability
+        const step = 50; // ms
+        let acc = elapsed;
+        while (acc >= step) {
+          tick(step / 1000.0);
+          acc -= step;
+        }
+        // Handle any remaining time
+        if (acc > 0) {
+          tick(acc / 1000.0);
+        }
+
+        // sampling for controller every ~1s (document says ~1 Hz)
+        if (now - lastSampleTime >= samplePeriod) {
+          lastSampleTime = now;
+          // measurement with noise (simulate sensor reading of distance converted to level)
+          // add measurement noise
+          const measured = Math.max(
+            minLevel,
+            Math.min(maxLevel, level + gaussianNoise(noiseSigma))
+          );
+          // controller logic uses measured
+          controllerSample(measured);
+
+          // update UI small
+          levelMeasuredEl.textContent = measured.toFixed(2);
+          debounceEl.textContent = debounceCounter;
+        }
+
+        // Update chart more frequently for smooth visualization (every 100ms)
+        if (now - lastChartUpdate >= chartUpdateInterval) {
+          lastChartUpdate = now;
+          pushChartData(level); // Use real level for smooth visualization
+        }
+
+        // UI updates every frame - force immediate visual update
+        const waterHeight = levelToPercent(level);
+        // Force update by removing and setting height
+        waterEl.style.height = "";
+        waterEl.style.height = waterHeight + "%";
+        waterEl.textContent = level.toFixed(2) + " cm";
+        levelRealEl.textContent = level.toFixed(2);
+        pumpStateEl.textContent = pumpOn ? "ON" : "OFF";
+        pumpStateEl.style.color = pumpOn ? "#0b6623" : "#9c2b2b";
+        // Show/hide pump indicator
+        if (pumpOn) {
+          pumpIndicatorEl.style.display = "block";
+        } else {
+          pumpIndicatorEl.style.display = "none";
+        }
+
+        requestAnimationFrame(loop);
+      }
+
+      function pushChartData(levelValue) {
+        const t = new Date().toLocaleTimeString();
+        // Level chart shows real level for smooth visualization
+        chartLevel.data.labels.push(t);
+        chartLevel.data.datasets[0].data.push(levelValue);
+
+        if (chartLevel.data.labels.length > maxPoints) {
+          chartLevel.data.labels.shift();
+          chartLevel.data.datasets[0].data.shift();
+        }
+        chartLevel.update("none");
+
+        // Error chart: e(t) = thresholdOff - levelValue (error should be 0 when level = 7)
+        chartError.data.labels.push(t);
+        const errorValue = thresholdOff - levelValue;
+        chartError.data.datasets[0].data.push(errorValue);
+
+        if (chartError.data.labels.length > maxPoints) {
+          chartError.data.labels.shift();
+          chartError.data.datasets[0].data.shift();
+        }
+        chartError.update("none");
+      }
+
+      // initialize display values
+      document.getElementById("pumpRateVal").textContent = pumpRate.toFixed(2);
+      document.getElementById("sipVal").textContent = sipSize.toFixed(2);
+      document.getElementById("noiseVal").textContent = noiseSigma.toFixed(2);
+      document.getElementById("debVal").textContent = debounceRequired;
+
+      // Start loop
+      requestAnimationFrame(loop);
+    </script>
+  </body>
+</html>
