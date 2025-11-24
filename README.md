@@ -2,6 +2,10 @@
 
 Simulación interactiva de un sistema de control ON/OFF para un bebedero automático. La aplicación permite visualizar en tiempo real el nivel de agua, el error de control, y simular el comportamiento del sistema con diferentes parámetros configurables.
 
+## Integrantes
+- Juan Martin Vazquez
+- Carlos Daniel Ojeda Cabrera
+
 ## Instalación y Ejecución
 
 ### Paso 1: Clonar el repositorio
