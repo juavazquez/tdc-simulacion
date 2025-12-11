@@ -10,7 +10,7 @@
         margin: 16px;
         background: #f6f8fb;
         color: #202528;
-      }
+      /* llave extra eliminada */
       h1 {
         margin-bottom: 8px;
       }
@@ -27,7 +27,7 @@
       }
       #tank {
         width: 340px;
-        height: 460px;
+        height: 345px;
         background: #e6eef8;
         border-radius: 10px;
         position: relative;
@@ -55,13 +55,13 @@
         gap: 8px;
       }
       button {
-        padding: 12px 16px;
-        border-radius: 6px;
+        padding: 7px 12px;
+        border-radius: 5px;
         border: none;
         cursor: pointer;
         background: #1f86d6;
         color: white;
-        font-size: 17px;
+        font-size: 15px;
       }
       button.secondary {
         background: #8896a6;
@@ -80,8 +80,41 @@
         border-radius: 8px;
         padding: 8px;
         max-width: 100%;
-        height: 350px !important;
+        height: 320px !important;
         width: 100% !important;
+      }
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 0;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+        height: 88vh;
+        align-items: stretch;
+      }
+      }
+      .charts-grid .card {
+        width: 100%;
+        min-width: 0;
+        height: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+        padding: 4px !important;
+      }
+      .charts-grid .card > div {
+        flex: 1;
+        display: flex;
+        align-items: stretch;
+      }
+      .charts-grid canvas {
+        width: 100% !important;
+        min-height: 0;
+        /* Eliminar max-height para que el canvas se adapte mejor */
       }
       .status {
         font-weight: 600;
@@ -92,7 +125,9 @@
         align-items: center;
       }
       input[type="range"] {
-        width: 160px;
+        width: 90px;
+        min-width: 70px;
+        max-width: 120px;
       }
       .footer {
         margin-top: 12px;
@@ -144,75 +179,82 @@
               Perro bebe (de a poco)
             </button>
             <button id="resetBtn" class="secondary">Reset</button>
+            <button id="pauseBtn" class="secondary">Pausar</button>
           </div>
 
           <div style="margin-top: 10px">
             <div class="param">
-              <label>Velocidad de llenado (cm/s) bomba:</label
-              ><input
-                id="pumpRate"
-                type="range"
-                min="1"
-                max="2"
-                step="0.1"
-                value="1"
-              /><span id="pumpRateVal">1</span>
+              <label>Velocidad de llenado (cm/s) bomba:</label>
+              <input id="pumpRate" type="range" min="1" max="2" step="0.1" value="1" />
+              <span id="pumpRateVal">1</span>
             </div>
             <div class="param">
-              <label>Consumo por sorbo (cm):</label
-              ><input
-                id="sipSize"
-                type="range"
-                min="0.5"
-                max="6"
-                step="0.1"
-                value="2"
-              /><span id="sipVal">2</span>
+              <label>Consumo por sorbo (cm):</label>
+              <input id="sipSize" type="range" min="0.5" max="6" step="0.1" value="2" />
+              <span id="sipVal">2</span>
             </div>
             <div class="param">
-              <label>Ruido sensor:</label
-              ><input
-                id="noise"
-                type="range"
-                min="0"
-                max="1.5"
-                step="0.01"
-                value="0.12"
-              /><span id="noiseVal">0.12</span>
+              <label>Ruido sensor:</label>
+              <input id="noise" type="range" min="0" max="1.5" step="0.01" value="0.12" />
+              <span id="noiseVal">0.12</span>
+              <label style="margin-left:16px;">Duración(s):</label>
+              <input id="noiseDuration" type="number" min="1" max="120" value="5" style="width:60px;">
+              <button id="noiseBtn" class="secondary" style="margin-left:8px;">Activar ruido</button>
             </div>
             <div class="param">
-              <label>Tiempo de verificación de error (s):</label
-              ><input
-                id="debounceSec"
-                type="range"
-                min="5"
-                max="30"
-                step="1"
-                value="30"
-              /><span id="debVal">30</span>
+              <label>Tiempo de verificación de error (s):</label>
+              <input id="debounceSec" type="range" min="5" max="30" step="1" value="30" />
+              <span id="debVal">30</span>
+            </div>
+            <div class="param">
+              <!-- Eliminado: Nivel objetivo (cm) -->
+            </div>
+            <div class="param">
+              <label>Banda mínima (cm) para encender bomba:</label>
+              <input id="bandMin" type="number" min="0" max="10" step="0.1" value="3" style="width:60px;">
+            </div>
+            <div class="param">
+              <label>Banda máxima (cm) para apagar bomba:</label>
+              <input id="bandMax" type="number" min="0" max="10" step="0.1" value="7" style="width:60px;">
             </div>
           </div>
         </div>
       </div>
 
       <div style="flex: 1">
-        <div class="card" style="padding: 12px; margin-bottom: 12px">
-          <h3 style="margin: 0 0 8px 0; font-size: 16px">Nivel de Agua</h3>
-          <div style="height: 350px; position: relative">
-            <canvas id="chartLevel"></canvas>
+        <div class="charts-grid">
+          <div class="card" style="padding: 12px;">
+            <h3 style="margin: 0 0 2px 0; font-size: 12px">Nivel de Agua</h3>
+             <div style="height: 90px; position: relative">
+                <canvas id="chartLevel"></canvas>
+             </div>
           </div>
-        </div>
-
-        <div class="card" style="padding: 12px">
-          <h3 style="margin: 0 0 8px 0; font-size: 16px">Error de Control</h3>
-          <div style="height: 350px; position: relative">
-            <canvas id="chartError"></canvas>
+          <div class="card" style="padding: 12px;">
+            <h3 style="margin: 0 0 2px 0; font-size: 12px">Señal de Realimentación (Nivel medido)</h3>
+            <div style="height: 120px; position: relative">
+                <canvas id="chartFeedback"></canvas>
+             </div>
+          </div>
+          <div class="card" style="padding: 12px;">
+            <h3 style="margin: 0 0 2px 0; font-size: 12px">Error de Control</h3>
+             <div style="height: 90px; position: relative">
+                <canvas id="chartError"></canvas>
+             </div>
+          </div>
+          <div class="card" style="padding: 12px;">
+            <h3 style="margin: 0 0 2px 0; font-size: 12px">Relé ON/OFF</h3>
+             <div style="height: 90px; position: relative">
+                <canvas id="chartRelay"></canvas>
+             </div>
           </div>
         </div>
       </div>
     </div>
 
     <script>
+      // Estado de pausa
+      let paused = false;
+      let pauseBtn = null;
       /* Parámetros basados en el documento:
    - encendido < 3 cm, apagado >= 7 cm
    - muestreo ≈ 1 Hz, tiempo de respuesta bombeo 5-10 s (se modela con rate de llenado)
@@ -225,9 +267,9 @@
       const maxLevel = 10; // tope visual
       const minLevel = 0;
 
-      // controller thresholds (from doc)
-      const thresholdOn = 3.0;
-      const thresholdOff = 7.0;
+      // controller thresholds (configurables)
+      let thresholdOn = parseFloat(document.getElementById("bandMin").value);
+      let thresholdOff = parseFloat(document.getElementById("bandMax").value);
       let sampleIntervalMs = 100; // simulation tick (smaller than sampling)
       let samplePeriod = 1000; // controller samples every ~1s (document)
       let lastSampleTime = 0;
@@ -235,7 +277,7 @@
       // pump params (user adjustable)
       let pumpRate = parseFloat(document.getElementById("pumpRate").value); // cm/s when pump ON
       let sipSize = parseFloat(document.getElementById("sipSize").value); // cm drop on sip
-      let noiseSigma = parseFloat(document.getElementById("noise").value);
+      let noiseSigma = 0; // Ruido solo activo cuando se presiona el botón
       let debounceRequired = parseInt(
         document.getElementById("debounceSec").value
       ); // seconds
@@ -267,6 +309,29 @@
       const debVal = document.getElementById("debVal");
 
       // update sliders display
+      // Ruido temporizado
+      let noiseTimeout = null;
+      let noisePrev = null;
+      document.getElementById("noiseBtn").addEventListener("click", () => {
+        const dur = parseFloat(document.getElementById("noiseDuration").value) || 1;
+        // Si ya hay ruido temporizado, limpiar
+        if (noiseTimeout) {
+          clearTimeout(noiseTimeout);
+          noiseTimeout = null;
+        }
+        // Activar ruido solo durante el tiempo indicado
+        noiseSigma = parseFloat(document.getElementById("noise").value);
+        document.getElementById("noise").disabled = true;
+        document.getElementById("noiseBtn").disabled = true;
+        document.getElementById("noiseBtn").textContent = "Ruido activo...";
+        noiseTimeout = setTimeout(() => {
+          noiseSigma = 0;
+          document.getElementById("noise").disabled = false;
+          document.getElementById("noiseBtn").disabled = false;
+          document.getElementById("noiseBtn").textContent = "Activar ruido";
+          noiseTimeout = null;
+        }, dur * 1000);
+      });
       document.getElementById("pumpRate").addEventListener("input", (e) => {
         pumpRate = parseFloat(e.target.value);
         pumpRateVal.textContent = pumpRate.toFixed(2);
@@ -276,34 +341,69 @@
         sipVal.textContent = sipSize.toFixed(2);
       });
       document.getElementById("noise").addEventListener("input", (e) => {
-        noiseSigma = parseFloat(e.target.value);
-        noiseVal.textContent = noiseSigma.toFixed(2);
+        noiseVal.textContent = parseFloat(e.target.value).toFixed(2);
       });
       document.getElementById("debounceSec").addEventListener("input", (e) => {
         debounceRequired = parseInt(e.target.value);
         debVal.textContent = debounceRequired;
       });
+      const bandMinInput = document.getElementById("bandMin");
+      const bandMaxInput = document.getElementById("bandMax");
+      bandMinInput.addEventListener("input", (e) => {
+        let minVal = parseFloat(bandMinInput.value);
+        let maxVal = parseFloat(bandMaxInput.value);
+        if (minVal > maxVal) {
+          bandMaxInput.value = minVal;
+          maxVal = minVal;
+        }
+        thresholdOn = minVal;
+        thresholdOff = maxVal;
+        updateChartBands();
+      });
+      bandMaxInput.addEventListener("input", (e) => {
+        let minVal = parseFloat(bandMinInput.value);
+        let maxVal = parseFloat(bandMaxInput.value);
+        if (maxVal < minVal) {
+          bandMinInput.value = maxVal;
+          minVal = maxVal;
+        }
+        thresholdOn = minVal;
+        thresholdOff = maxVal;
+        updateChartBands();
+      });
+      // Eliminado: targetLevel event listener
 
       // dog drink actions
       document.getElementById("dogDrinkBtn").addEventListener("click", () => {
-        // single sip: instant drop
-        level = Math.max(minLevel, level - sipSize);
+        if (!paused) {
+          level = Math.max(minLevel, level - sipSize);
+        }
       });
       document.getElementById("dogDrinkBurst").addEventListener("click", () => {
-        // burst: multiple sips over 3s
-        let bursts = 6;
-        let drop = sipSize * 0.9;
-        for (let i = 0; i < bursts; i++) {
-          setTimeout(() => {
-            level = Math.max(minLevel, level - drop / bursts);
-          }, i * 300);
+        if (!paused) {
+          let bursts = 6;
+          let drop = sipSize * 0.9;
+          for (let i = 0; i < bursts; i++) {
+            setTimeout(() => {
+              if (!paused) {
+                level = Math.max(minLevel, level - drop / bursts);
+              }
+            }, i * 300);
+          }
         }
       });
       document.getElementById("resetBtn").addEventListener("click", () => {
-        level = 7.0;
-        pumpOn = false;
-        debounceCounter = 0;
-        pumpSwitchTimestamp = null;
+        if (!paused) {
+          level = 7.0;
+          pumpOn = false;
+          debounceCounter = 0;
+          pumpSwitchTimestamp = null;
+        }
+      });
+      pauseBtn = document.getElementById("pauseBtn");
+      pauseBtn.addEventListener("click", () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? "Continuar" : "Pausar";
       });
 
       // Visual mapping: level/cm -> percent height of tank
@@ -313,7 +413,140 @@
 
       // Chart.js real-time data
       const ctxLevel = document.getElementById("chartLevel").getContext("2d");
+      const ctxFeedback = document.getElementById("chartFeedback").getContext("2d");
       const ctxError = document.getElementById("chartError").getContext("2d");
+      const ctxRelay = document.getElementById("chartRelay").getContext("2d");
+            // Gráfico de señal de realimentación (nivel medido)
+            const chartFeedback = makeChart(
+              ctxFeedback,
+              "Nivel medido (cm)",
+              0,
+              10,
+              "Señal de Realimentación"
+            );
+            // Configurar para mostrar todos los números de referencia en el eje Y
+            chartFeedback.options.scales.y.ticks = {
+              stepSize: 1,
+              precision: 0,
+              callback: function (value) {
+                return value;
+              },
+            };
+            chartFeedback.options.scales.y.afterBuildTicks = function (scale) {
+              scale.ticks = [];
+              for (let i = 0; i <= 10; i++) {
+                scale.ticks.push({ value: i });
+              }
+            };
+            // Agregar franjas de color igual que chartLevel
+            chartFeedback.options.plugins.annotation = {
+              annotations: {
+                boxGreen: {
+                  type: "box",
+                  xMin: null,
+                  xMax: null,
+                  yMin: 3,
+                  yMax: 10,
+                  backgroundColor: "rgba(0, 255, 0, 0.2)",
+                  borderColor: "rgba(0, 255, 0, 0)",
+                  borderWidth: 0,
+                  xScaleID: "x",
+                  yScaleID: "y",
+                  label: {
+                    display: true,
+                    content: "Nivel de agua aceptable",
+                    position: "start",
+                    backgroundColor: "rgba(0, 255, 0, 0.2)",
+                    color: "#000",
+                    font: {
+                      size: 12,
+                    },
+                  },
+                },
+                boxRed: {
+                  type: "box",
+                  xMin: null,
+                  xMax: null,
+                  yMin: 0,
+                  yMax: 3,
+                  backgroundColor: "rgba(255, 0, 0, 0.2)",
+                  borderColor: "rgba(255, 0, 0, 0)",
+                  borderWidth: 0,
+                  xScaleID: "x",
+                  yScaleID: "y",
+                  label: {
+                    display: true,
+                    content: "Nivel de agua crítico",
+                    position: "start",
+                    backgroundColor: "rgba(255, 0, 0, 0.2)",
+                    color: "#000",
+                    font: {
+                      size: 12,
+                    },
+                  },
+                },
+              },
+            };
+            chartFeedback.update();
+      // Gráfico de relé ON/OFF
+      const chartRelay = new Chart(ctxRelay, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Relé (ON=1, OFF=0)",
+              data: [],
+              fill: 'origin',
+              stepped: true,
+              borderColor: "#e67e22",
+              backgroundColor: "rgba(230, 126, 34, 0.15)",
+              pointRadius: 0,
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: false,
+              },
+              ticks: {
+                display: false,
+              },
+            },
+            y: {
+              min: -0.1,
+              max: 1.1,
+              ticks: {
+                stepSize: 1,
+                callback: function (value) {
+                  if (value === 1) return '1 (ON)';
+                  if (value === 0) return '0 (OFF)';
+                  return '';
+                },
+                font: { size: 16, weight: 'bold' },
+                padding: 8,
+              },
+              title: {
+                display: false,
+              },
+              grid: {
+                color: "#eee",
+              },
+            },
+          },
+          plugins: {
+            legend: { display: false },
+            title: { display: false },
+          },
+        },
+      });
 
       // Data buffers for charts
       const maxPoints = 120; // show last 2 minutes at 1s sampling
@@ -527,8 +760,10 @@
 
       chartError.update();
 
-      // reference center (center of band 3-7)
-      const refCenter = (thresholdOn + thresholdOff) / 2.0;
+      // reference center (center of band)
+      function getRefCenter() {
+        return (thresholdOn + thresholdOff) / 2.0;
+      }
 
       // controller sample function (runs every ~samplePeriod)
       function controllerSample(measured) {
@@ -554,16 +789,53 @@
         }
       }
 
+      // Actualiza las bandas de color en los gráficos según los valores configurados
+      function updateChartBands() {
+        // chartLevel
+        chartLevel.options.plugins.annotation.annotations.boxGreen.yMin = thresholdOn;
+        chartLevel.options.plugins.annotation.annotations.boxGreen.yMax = maxLevel;
+        chartLevel.options.plugins.annotation.annotations.boxRed.yMin = minLevel;
+        chartLevel.options.plugins.annotation.annotations.boxRed.yMax = thresholdOn;
+        chartLevel.update();
+        // chartFeedback
+        chartFeedback.options.plugins.annotation.annotations.boxGreen.yMin = thresholdOn;
+        chartFeedback.options.plugins.annotation.annotations.boxGreen.yMax = maxLevel;
+        chartFeedback.options.plugins.annotation.annotations.boxRed.yMin = minLevel;
+        chartFeedback.options.plugins.annotation.annotations.boxRed.yMax = thresholdOn;
+        chartFeedback.update();
+        // chartError: bandas dinámicas según los valores configurados
+        const errorPermitidoMin = -2;
+        const errorPermitidoMax = thresholdOff - thresholdOn;
+        chartError.options.plugins.annotation.annotations.boxGreen.yMin = errorPermitidoMin;
+        chartError.options.plugins.annotation.annotations.boxGreen.yMax = errorPermitidoMax;
+        chartError.options.plugins.annotation.annotations.boxRed.yMin = errorPermitidoMax;
+        chartError.options.plugins.annotation.annotations.boxRed.yMax = 8; // Mantener el tope superior
+        chartError.update();
+      }
+
       // simulation tick (smaller steps for smoother integration)
       let simTime = 0;
 
+      // Guardar la última medición ruidosa para usarla en el llenado
+      let lastMeasured = level;
       function tick(dt) {
         // dt in seconds
         // Pump effect: when pumpOn, level increases at pumpRate cm/s; otherwise level stays static
         if (pumpOn && dt > 0) {
-          level += pumpRate * dt;
-          // saturate
-          if (level > maxLevel) level = maxLevel;
+          // Simular la medición con ruido en cada tick para decidir el apagado
+          const simulatedMeasured = Math.max(
+            minLevel,
+            Math.min(maxLevel, level + gaussianNoise(noiseSigma))
+          );
+          if (simulatedMeasured >= thresholdOff) {
+            pumpOn = false;
+            pumpSwitchTimestamp = Date.now();
+            debounceCounter = 0;
+          } else {
+            level += pumpRate * dt;
+            // saturate
+            if (level > maxLevel) level = maxLevel;
+          }
         }
         // When pump is OFF, level remains static (no decrease)
         if (level < minLevel) level = minLevel;
@@ -575,92 +847,108 @@
       const chartUpdateInterval = 100; // Update chart every 100ms for smooth visualization
 
       function loop(now) {
-        // Initialize lastTime on first call
         if (lastTime === null) {
           lastTime = now;
           requestAnimationFrame(loop);
           return;
         }
-        let elapsed = now - lastTime;
-        lastTime = now;
-        simTime += elapsed;
+        if (!paused) {
+          let elapsed = now - lastTime;
+          lastTime = now;
+          simTime += elapsed;
 
-        // step simulation in small increments for stability
-        const step = 50; // ms
-        let acc = elapsed;
-        while (acc >= step) {
-          tick(step / 1000.0);
-          acc -= step;
+          // step simulation in small increments for stability
+          const step = 50; // ms
+          let acc = elapsed;
+          while (acc >= step) {
+            tick(step / 1000.0);
+            acc -= step;
+          }
+          // Handle any remaining time
+          if (acc > 0) {
+            tick(acc / 1000.0);
+          }
+
+          // sampling for controller every ~1s (document says ~1 Hz)
+          if (now - lastSampleTime >= samplePeriod) {
+            lastSampleTime = now;
+            // measurement with noise (simulate sensor reading of distance converted to level)
+            // add measurement noise
+            const measured = Math.max(
+              minLevel,
+              Math.min(maxLevel, level + gaussianNoise(noiseSigma))
+            );
+            lastMeasured = measured; // Guardar la última medición ruidosa
+            // controller logic uses measured
+            controllerSample(measured);
+
+            // update UI small
+            levelMeasuredEl.textContent = measured.toFixed(2);
+            debounceEl.textContent = debounceCounter;
+          }
+
+          // Update chart more frequently for smooth visualization (every 100ms)
+          if (now - lastChartUpdate >= chartUpdateInterval) {
+            lastChartUpdate = now;
+            pushChartData(level); // Use real level for smooth visualization
+          }
         }
-        // Handle any remaining time
-        if (acc > 0) {
-          tick(acc / 1000.0);
-        }
-
-        // sampling for controller every ~1s (document says ~1 Hz)
-        if (now - lastSampleTime >= samplePeriod) {
-          lastSampleTime = now;
-          // measurement with noise (simulate sensor reading of distance converted to level)
-          // add measurement noise
-          const measured = Math.max(
-            minLevel,
-            Math.min(maxLevel, level + gaussianNoise(noiseSigma))
-          );
-          // controller logic uses measured
-          controllerSample(measured);
-
-          // update UI small
-          levelMeasuredEl.textContent = measured.toFixed(2);
-          debounceEl.textContent = debounceCounter;
-        }
-
-        // Update chart more frequently for smooth visualization (every 100ms)
-        if (now - lastChartUpdate >= chartUpdateInterval) {
-          lastChartUpdate = now;
-          pushChartData(level); // Use real level for smooth visualization
-        }
-
         // UI updates every frame - force immediate visual update
         const waterHeight = levelToPercent(level);
-        // Force update by removing and setting height
         waterEl.style.height = "";
         waterEl.style.height = waterHeight + "%";
         waterEl.textContent = level.toFixed(2) + " cm";
         levelRealEl.textContent = level.toFixed(2);
         pumpStateEl.textContent = pumpOn ? "ON" : "OFF";
         pumpStateEl.style.color = pumpOn ? "#0b6623" : "#9c2b2b";
-        // Show/hide pump indicator
         if (pumpOn) {
           pumpIndicatorEl.style.display = "block";
         } else {
           pumpIndicatorEl.style.display = "none";
         }
-
         requestAnimationFrame(loop);
       }
 
       function pushChartData(levelValue) {
         const t = new Date().toLocaleTimeString();
         // Level chart shows real level for smooth visualization
-        chartLevel.data.labels.push(t);
-        chartLevel.data.datasets[0].data.push(levelValue);
+        // Limitar valores para cada gráfico
+        const nivelLim = Math.max(minLevel, Math.min(maxLevel, levelValue));
+        const medidoLim = Math.max(minLevel, Math.min(maxLevel, lastMeasured));
+        const errorValueRaw = thresholdOff - lastMeasured;
+        const errorLim = Math.max(-2, Math.min(8, errorValueRaw));
 
+        chartLevel.data.labels.push(t);
+        chartLevel.data.datasets[0].data.push(nivelLim);
         if (chartLevel.data.labels.length > maxPoints) {
           chartLevel.data.labels.shift();
           chartLevel.data.datasets[0].data.shift();
         }
         chartLevel.update("none");
 
-        // Error chart: e(t) = thresholdOff - levelValue (error should be 0 when level = 7)
-        chartError.data.labels.push(t);
-        const errorValue = thresholdOff - levelValue;
-        chartError.data.datasets[0].data.push(errorValue);
+        chartFeedback.data.labels.push(t);
+        chartFeedback.data.datasets[0].data.push(medidoLim);
+        if (chartFeedback.data.labels.length > maxPoints) {
+          chartFeedback.data.labels.shift();
+          chartFeedback.data.datasets[0].data.shift();
+        }
+        chartFeedback.update("none");
 
+        chartError.data.labels.push(t);
+        chartError.data.datasets[0].data.push(errorLim);
         if (chartError.data.labels.length > maxPoints) {
           chartError.data.labels.shift();
           chartError.data.datasets[0].data.shift();
         }
         chartError.update("none");
+
+        chartRelay.data.labels.push(t);
+        chartRelay.data.datasets[0].data.push(pumpOn ? 1 : 0);
+        if (chartRelay.data.labels.length > maxPoints) {
+          chartRelay.data.labels.shift();
+          chartRelay.data.datasets[0].data.shift();
+        }
+        chartRelay.update("none");
       }
 
       // initialize display values
