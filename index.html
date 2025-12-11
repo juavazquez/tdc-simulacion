@@ -202,6 +202,10 @@
               <button id="noiseBtn" class="secondary" style="margin-left:8px;">Activar ruido</button>
             </div>
             <div class="param">
+              <label>Frecuencia de muestreo (Hz):</label>
+              <input id="samplingFreq" type="number" min="0.1" max="10" step="0.1" value="1" style="width:60px;">
+            </div>
+            <div class="param">
               <label>Tiempo de verificación de error (s):</label>
               <input id="debounceSec" type="range" min="5" max="30" step="1" value="30" />
               <span id="debVal">30</span>
@@ -273,6 +277,14 @@
       let sampleIntervalMs = 100; // simulation tick (smaller than sampling)
       let samplePeriod = 1000; // controller samples every ~1s (document)
       let lastSampleTime = 0;
+        // Frecuencia de muestreo configurable
+        let samplingFreq = parseFloat(document.getElementById("samplingFreq").value); // Hz
+        function updateSamplePeriod() {
+          samplingFreq = parseFloat(document.getElementById("samplingFreq").value);
+          if (samplingFreq > 0) {
+            samplePeriod = 1000 / samplingFreq;
+          }
+        }
 
       // pump params (user adjustable)
       let pumpRate = parseFloat(document.getElementById("pumpRate").value); // cm/s when pump ON
@@ -286,6 +298,7 @@
       let pumpOn = false;
       let debounceCounter = 0; // in seconds of sustained below-threshold
       let pumpSwitchTimestamp = null;
+      let debounceActive = false;
 
       // measurement noise function
       function gaussianNoise(sigma) {
@@ -347,6 +360,9 @@
         debounceRequired = parseInt(e.target.value);
         debVal.textContent = debounceRequired;
       });
+        document.getElementById("samplingFreq").addEventListener("input", (e) => {
+          updateSamplePeriod();
+        });
       const bandMinInput = document.getElementById("bandMin");
       const bandMaxInput = document.getElementById("bandMax");
       bandMinInput.addEventListener("input", (e) => {
@@ -769,16 +785,18 @@
       function controllerSample(measured) {
         // measured: value including sensor noise (cm)
         // ON/OFF with debounce: Only turn ON if measured < thresholdOn for debounceRequired seconds continuously.
-        if (measured < thresholdOn) {
-          debounceCounter++;
-        } else {
+        // Solo marcar si está bajo el umbral, el incremento será en el tick
+        debounceActive = measured < thresholdOn;
+        if (!debounceActive) {
           debounceCounter = 0;
         }
 
-        // Turn pump ON if debounceCounter exceeded
+        // Turn pump ON si debounceCounter excede el tiempo requerido
         if (!pumpOn && debounceCounter >= debounceRequired) {
           pumpOn = true;
           pumpSwitchTimestamp = Date.now();
+          debounceCounter = 0;
+          debounceActive = false;
         }
 
         // Turn pump OFF when level reaches thresholdOff
@@ -821,6 +839,9 @@
       function tick(dt) {
         // dt in seconds
         // Pump effect: when pumpOn, level increases at pumpRate cm/s; otherwise level stays static
+        if (debounceActive && dt > 0) {
+          debounceCounter += dt;
+        }
         if (pumpOn && dt > 0) {
           // Simular la medición con ruido en cada tick para decidir el apagado
           const simulatedMeasured = Math.max(
@@ -884,7 +905,7 @@
 
             // update UI small
             levelMeasuredEl.textContent = measured.toFixed(2);
-            debounceEl.textContent = debounceCounter;
+            debounceEl.textContent = debounceCounter.toFixed(1);
           }
 
           // Update chart more frequently for smooth visualization (every 100ms)
@@ -956,6 +977,7 @@
       document.getElementById("sipVal").textContent = sipSize.toFixed(2);
       document.getElementById("noiseVal").textContent = noiseSigma.toFixed(2);
       document.getElementById("debVal").textContent = debounceRequired;
+        updateSamplePeriod();
 
       // Start loop
       requestAnimationFrame(loop);
