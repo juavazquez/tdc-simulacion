@@ -501,6 +501,25 @@
                     },
                   },
                 },
+                lineNivelCritico: {
+                  type: "line",
+                  yMin: thresholdOn,
+                  yMax: thresholdOn,
+                  borderColor: "#000",
+                  borderWidth: 2,
+                  borderDash: [6, 6],
+                  label: {
+                    display: true,
+                    position: "end",
+                    color: "#000",
+                    font: {
+                      size: 12,
+                      style: "italic"
+                    }
+                  },
+                  xScaleID: "x",
+                  yScaleID: "y"
+                },
               },
             };
             chartFeedback.update();
@@ -695,6 +714,25 @@
               },
             },
           },
+          lineNivelCritico: {
+            type: "line",
+            yMin: thresholdOn,
+            yMax: thresholdOn,
+            borderColor: "#000",
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              position: "end",
+              color: "#000",
+              font: {
+                size: 12,
+                style: "italic"
+              }
+            },
+            xScaleID: "x",
+            yScaleID: "y"
+          },
         },
       };
 
@@ -771,6 +809,25 @@
               },
             },
           },
+          lineErrorPermitido: {
+            type: "line",
+            yMin: thresholdOff - thresholdOn,
+            yMax: thresholdOff - thresholdOn,
+            borderColor: "#000",
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              position: "end",
+              color: "#000",
+              font: {
+                size: 12,
+                style: "italic"
+              }
+            },
+            xScaleID: "x",
+            yScaleID: "y"
+          },
         },
       };
 
@@ -814,12 +871,16 @@
         chartLevel.options.plugins.annotation.annotations.boxGreen.yMax = maxLevel;
         chartLevel.options.plugins.annotation.annotations.boxRed.yMin = minLevel;
         chartLevel.options.plugins.annotation.annotations.boxRed.yMax = thresholdOn;
+        chartLevel.options.plugins.annotation.annotations.lineNivelCritico.yMin = thresholdOn;
+        chartLevel.options.plugins.annotation.annotations.lineNivelCritico.yMax = thresholdOn;
         chartLevel.update();
         // chartFeedback
         chartFeedback.options.plugins.annotation.annotations.boxGreen.yMin = thresholdOn;
         chartFeedback.options.plugins.annotation.annotations.boxGreen.yMax = maxLevel;
         chartFeedback.options.plugins.annotation.annotations.boxRed.yMin = minLevel;
         chartFeedback.options.plugins.annotation.annotations.boxRed.yMax = thresholdOn;
+        chartFeedback.options.plugins.annotation.annotations.lineNivelCritico.yMin = thresholdOn;
+        chartFeedback.options.plugins.annotation.annotations.lineNivelCritico.yMax = thresholdOn;
         chartFeedback.update();
         // chartError: bandas dinámicas según los valores configurados
         const errorPermitidoMin = -2;
@@ -828,6 +889,8 @@
         chartError.options.plugins.annotation.annotations.boxGreen.yMax = errorPermitidoMax;
         chartError.options.plugins.annotation.annotations.boxRed.yMin = errorPermitidoMax;
         chartError.options.plugins.annotation.annotations.boxRed.yMax = 8; // Mantener el tope superior
+        chartError.options.plugins.annotation.annotations.lineErrorPermitido.yMin = errorPermitidoMax;
+        chartError.options.plugins.annotation.annotations.lineErrorPermitido.yMax = errorPermitidoMax;
         chartError.update();
       }
 
